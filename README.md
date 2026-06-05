@@ -69,4 +69,3 @@ lazado-ecommerce/
 │   ├── electronic.js # Fetch API kategori elektronik
 │   └── cart.js       # Logika localStorage, keranjang, dan pop-up checkout
 │
-└── README.md

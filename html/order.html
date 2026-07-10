@@ -3,26 +3,46 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LAZADO - Home</title>
+    <title>Pesanan Saya - LAZADO</title>
     <link rel="icon" href="../assets/shopping_cart_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png">
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="../css/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
 <body class="page-transition">
     <header>
-        <h1><a href="index.html">LAZADO🛒</a></h1>
+        <h1><a href="product.html">LAZADO🛒</a></h1>
+
         <nav class="header-nav" id="header-nav">
+            <div class="dropdown">
+                <a>CATEGORIES
+                  <span class="material-symbols-outlined">expand_more</span>
+                </a>
+                <div class="dropdown-content">
+                    <a href="men-clothing.html">Men's Clothing</a>
+                    <a href="women-clothing.html">Women's Clothing</a>
+                    <a href="jewelery.html">Jewelery</a>
+                    <a href="electronic.html">Electronics</a>
+                </div>
+            </div>
+            <a href="cart.html">
+              <span id="cart-icon" class="material-symbols-outlined">shopping_cart</span>
+              <span class="nav-text">Cart</span>
+            </a>
+            <a href="about.html">ABOUT</a>
             <span id="auth-section"></span>
             <button id="theme-toggle" title="Toggle theme">
                 <span class="material-symbols-outlined sun-icon">light_mode</span>
                 <span class="material-symbols-outlined moon-icon">dark_mode</span>
+                <span class="nav-text">Theme</span>
             </button>
         </nav>
+
         <div class="header-search">
             <span class="material-symbols-outlined search-icon">search</span>
             <input type="text" id="search-input" placeholder="search" />
         </div>
+
         <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle menu" aria-expanded="false">
             <span class="material-symbols-outlined icon-menu">menu</span>
             <span class="material-symbols-outlined icon-close">close</span>
@@ -31,10 +51,9 @@
 
     <main>
         <section>
-            <img src="assets/online-shoping-16-vector.jpg" class="gambar" alt="Welcome Banner" />
-            <h2>ALL PRODUCTS</h2>
-            <div id="product-container">
-                </div>
+            <h2>Pesanan Saya 📦</h2>
+            <div id="order-container">
+            </div>
         </section>
     </main>
 
@@ -42,7 +61,7 @@
         <p>&copy; 2025 LAZADO</p>
     </footer>
 
-    <script src="javascript/shared/cart-utils.js"></script>
-    <script src="javascript/script.js"></script>
+    <script src="../javascript/shared/cart-utils.js"></script>
+    <script src="../javascript/order.js"></script>
 </body>
 </html>

@@ -1,60 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Proteksi halaman: redirect ke login jika belum login
+    if (!isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+    }
+
     // variabel utama untuk elemen keranjang dan ongkir
     const cartContentContainer = document.getElementById('cart-content-container');
     const shippingCost = 5.00;
 
-    // Fungsi Pop-up Notifikasi Kustom (Support Error/Success)
-    const showNotification = (message, isError = false) => {
-        const notification = document.createElement('div');
-        notification.classList.add('custom-notification');
-        
-        // Jika error, ubah warna background jadi merah
-        if (isError) {
-            notification.style.backgroundColor = '#dc3545';
-        }
-        
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.classList.add('hide');
-            setTimeout(() => {
-                notification.remove();
-            }, 500); 
-        }, 3000);
-    };
-
-    // perbarui ikon keranjang (misalnya, menambahkan indikator jika ada item)
-    const updateCartIconState = () => {
-        const cartIcon = document.getElementById('cart-icon');
-        if (!cartIcon) return; // keluar jika ikon tidak ditemukan
-        const cart = getCart();
-        if (cart.length > 0) {
-            cartIcon.classList.add('cart-active');
-        } else {
-            cartIcon.classList.remove('cart-active');
-        }
-    };
-
-    // ngambil data keranjang dari penyimpanan lokal
-    const getCart = () => {
-        const cartString = localStorage.getItem('lazadoCart');
-        return cartString ? JSON.parse(cartString) : [];
-    };
-
-    // nyimpan data keranjang ke localStorage dan memperbarui status ikon
-    const saveCart = (cart) => {
-        localStorage.setItem('lazadoCart', JSON.stringify(cart));
-        updateCartIconState(); // perbarui status ikon setiap kali menyimpan
-    };
-
     // ngapus item dari keranjang berdasarkan ID produk
     const removeItemFromCart = (productId) => {
-        let cart = getCart();
-        const newCart = cart.filter(item => item.id !== productId);
-        saveCart(newCart);
-        renderCart(); // nampilin ulang keranjang setelah item dihapus
+        const cart = getCart();
+        const item = cart.find(item => item.id === productId);
+        const itemName = item ? item.title : 'Item ini';
+        showConfirmDialog(`Hapus "${itemName}" dari keranjang?`, () => {
+            let cart = getCart();
+            const newCart = cart.filter(item => item.id !== productId);
+            saveCart(newCart);
+            renderCart();
+        });
     };
 
     // ngubah jumlah item di keranjang
@@ -193,6 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     showNotification('Harap lengkapi semua data pengiriman!', true);
                     return;
                 }
+                if (!isValidPhone(phoneInput.value)) {
+                    showNotification('Nomor telepon tidak valid! Minimal 10 digit.', true);
+                    return;
+                }
+                if (nameInput.value.trim().length < 3) {
+                    showNotification('Nama penerima minimal 3 karakter!', true);
+                    return;
+                }
                 // Simpan state
                 orderData.name = nameInput.value;
                 orderData.phone = phoneInput.value;
@@ -269,9 +243,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         showNotification('Harap lengkapi informasi Kartu Kredit!', true);
                         return;
                     }
+                    if (!isValidCreditCard(orderData.paymentDetails.ccInput.value)) {
+                        showNotification('Nomor kartu kredit tidak valid!', true);
+                        return;
+                    }
+                    if (!isValidExpiry(orderData.paymentDetails.expInput.value)) {
+                        showNotification('Masa berlaku kartu tidak valid atau sudah kedaluwarsa!', true);
+                        return;
+                    }
+                    if (!isValidCVV(orderData.paymentDetails.cvvInput.value)) {
+                        showNotification('CVV harus 3 atau 4 digit angka!', true);
+                        return;
+                    }
                 } else if (orderData.paymentMethod === 'e-wallet') {
                     if (!orderData.paymentDetails.ewalletInput.value) {
                         showNotification('Harap masukkan nomor E-Wallet!', true);
+                        return;
+                    }
+                    if (!isValidPhone(orderData.paymentDetails.ewalletInput.value)) {
+                        showNotification('Nomor E-Wallet tidak valid! Minimal 10 digit.', true);
                         return;
                     }
                 }
@@ -312,15 +302,31 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             const actions = createModalActions('Kembali', renderPaymentStep, 'Bayar Sekarang', () => {
-                // Simulasi proses loading pembayaran
-                actions.innerHTML = '<p style="width:100%; text-align:center; font-weight:bold;">Memproses pembayaran...</p>';
+                showLoading('Memproses pembayaran...');
                 
                 setTimeout(() => {
-                    showNotification('Pesanan berhasil dibuat! Terima kasih telah berbelanja.');
-                    saveCart([]); // Kosongkan keranjang
-                    renderCart(); // Render ulang UI keranjang kosong
-                    document.body.removeChild(modalOverlay); // Tutup modal
-                }, 1500); // Simulasi jeda server 1.5 detik
+                    hideLoading();
+                    const cartItems = getCart();
+                    const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+                    const total = subtotal + shippingCost;
+                    const order = {
+                        id: generateOrderId(),
+                        date: new Date().toISOString(),
+                        items: [...cartItems],
+                        subtotal,
+                        shipping: shippingCost,
+                        total,
+                        name: orderData.name,
+                        phone: orderData.phone,
+                        address: orderData.address,
+                        paymentMethod: orderData.paymentMethod,
+                        status: 'Lunas'
+                    };
+                    saveOrder(order);
+                    saveCart([]);
+                    document.body.removeChild(modalOverlay);
+                    showInvoice(order, renderCart);
+                }, 1500);
             });
 
             modalContent.append(title, summary, actions);
@@ -332,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(modalOverlay);
     };
     // ==========================================
-
 
     // nampilin seluruh isi keranjang belanja di halaman
     const renderCart = () => {
@@ -386,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 quantityInput.value = item.quantity;
                 quantityInput.min = '1';
                 quantityInput.className = 'quantity-input';
-                quantityInput.onchange = (e) => updateItemQuantity(item.id, parseInt(e.target.value));
+                quantityInput.onchange = (e) => updateItemQuantity(item.id, parseInt(e.target.value) || 1);
                 const plusBtn = document.createElement('button');
                 plusBtn.className = 'quantity-btn';
                 plusBtn.textContent = '+';
@@ -458,18 +463,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // variabel untuk tombol hamburger dan menu navigasi.
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navMenu = document.getElementById('header-nav');
+
+    // jika kedua elemen ada sebelum menambahkan event listener.
+    if (hamburgerBtn && navMenu) {
+        // event listener saat tombol hamburger diklik.
+        hamburgerBtn.addEventListener('click', () => {
+            // nampilin/nyembunyikan menu dan mengubah tampilan tombol
+            navMenu.classList.toggle('active');
+            hamburgerBtn.classList.toggle('active');
+        });
+    }
 });
-
-// variabel untuk tombol hamburger dan menu navigasi.
-const hamburgerBtn = document.getElementById('hamburger-btn');
-const navMenu = document.getElementById('header-nav');
-
-// jika kedua elemen ada sebelum menambahkan event listener.
-if (hamburgerBtn && navMenu) {
-    // event listener saat tombol hamburger diklik.
-    hamburgerBtn.addEventListener('click', () => {
-        // nampilin/nyembunyikan menu dan mengubah tampilan tombol
-        navMenu.classList.toggle('active');
-        hamburgerBtn.classList.toggle('active');
-    });
-}

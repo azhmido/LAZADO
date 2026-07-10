@@ -7,8 +7,9 @@
   <link rel="icon" href="../assets/shopping_cart_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png">
   <link rel="stylesheet" href="../css/regis.css" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
-<body>
+<body class="page-transition">
   <header>
     <h1><a href="../index.html">LAZADO🛒</a></h1>
      <nav>
@@ -21,8 +22,12 @@
 
   <main>
     <div class="signup-container">
-      <form action="login.html" class="signup-form">
+      <form class="signup-form" novalidate>
         <h2>Create an Account</h2>
+        <div class="form-alert" id="form-alert">
+          <span class="material-symbols-outlined alert-icon">error_outline</span>
+          <span class="alert-message"></span>
+        </div>
         <div class="input-group">
           <label for="fullname">Full Name</label>
           <input type="text" id="fullname" placeholder="Enter your full name" required />
@@ -31,13 +36,17 @@
           <label for="email">Email</label>
           <input type="email" id="email" placeholder="Enter your email" required />
         </div>
-         <div class="input-group">
-          <label for="fullname">Usernama</label>
-          <input type="text" id="username" placeholder="Enter your full name" required />
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" required />
         </div>
         <div class="input-group">
           <label for="password">Password</label>
           <input type="password" id="password" placeholder="Create a password" required />
+        </div>
+        <div class="input-group">
+          <label for="confirm-password">Confirm Password</label>
+          <input type="password" id="confirm-password" placeholder="Confirm your password" required />
         </div>
         <button type="submit" class="signup-button">Registration</button>
         <div class="form-footer">
@@ -51,6 +60,53 @@
     <p>&copy; 2025 LAZADO</p>
   </footer>
 
+  <script src="../javascript/shared/cart-utils.js"></script>
   <script src="../javascript/script.js"></script>
+  <script>
+    const regisAlert = document.getElementById('form-alert');
+    const regisAlertMsg = regisAlert?.querySelector('.alert-message');
+    const showRegisAlert = (msg, isError) => {
+      if (!regisAlert || !regisAlertMsg) return;
+      regisAlertMsg.textContent = msg;
+      regisAlert.className = 'form-alert';
+      regisAlert.classList.add('form-alert--' + (isError ? 'error' : 'success'));
+      requestAnimationFrame(() => {
+        regisAlert.classList.add('form-alert--visible');
+      });
+      if (!isError) {
+        setTimeout(() => {
+          regisAlert.classList.remove('form-alert--visible');
+        }, 3000);
+      }
+    };
+    document.querySelector('.signup-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('fullname').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm-password').value;
+
+      if (!name || !email || !username || !password || !confirm) {
+        showRegisAlert('Harap lengkapi semua field!', true);
+        return;
+      }
+      if (password.length < 6) {
+        showRegisAlert('Password minimal 6 karakter!', true);
+        return;
+      }
+      if (password !== confirm) {
+        showRegisAlert('Password dan konfirmasi password tidak cocok!', true);
+        return;
+      }
+      const result = registerUser({ name, email, username, password });
+      if (result.success) {
+        showRegisAlert('Registrasi berhasil! Mengarahkan ke login...', false);
+        setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+      } else {
+        showRegisAlert(result.message, true);
+      }
+    });
+  </script>
 </body>
 </html>

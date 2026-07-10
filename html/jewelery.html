@@ -7,8 +7,9 @@
     <link rel="icon" href="../assets/shopping_cart_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png">
     <link rel="stylesheet" href="../css/style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
-<body>
+<body class="page-transition">
     <header>
         <h1><a href="product.html">LAZADO🛒</a></h1>
 
@@ -20,16 +21,16 @@
                 <div class="dropdown-content">
                     <a href="men-clothing.html">Men's Clothing</a>
                     <a href="women-clothing.html">Women's Clothing</a>
-                    <a href="jewelry.html">Jewelery</a>
+                    <a href="jewelery.html">Jewelery</a>
                     <a href="electronic.html">Electronics</a>
                 </div>
             </div>
             <a href="cart.html">
               <span id="cart-icon" class="material-symbols-outlined">shopping_cart</span>
               <span class="nav-text">Cart</span>
-              <a href="about.html">ABOUT</a>
             </a>
-            <a href="../index.html">LOGOUT</a>
+            <a href="about.html">ABOUT</a>
+            <span id="auth-section"></span>
             <button id="theme-toggle" title="Toggle theme">
                 <span class="material-symbols-outlined sun-icon">light_mode</span>
                 <span class="material-symbols-outlined moon-icon">dark_mode</span>
@@ -61,6 +62,7 @@
         <p>&copy; 2025 LAZADO</p>
     </footer>
 
+    <script src="../javascript/shared/cart-utils.js"></script>
     <script src="../javascript/jewelery.js"></script>
 </body>
 </html>

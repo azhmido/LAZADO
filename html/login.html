@@ -7,8 +7,9 @@
   <link rel="icon" href="../assets/shopping_cart_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.png">
   <link rel="stylesheet" href="../css/login.css" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
 </head>
-<body>
+<body class="page-transition">
   <header>
     <h1><a href="../index.html">LAZADO🛒</a></h1>
     <nav>
@@ -21,8 +22,12 @@
 
   <main>
     <div class="login-container">
-      <form action="product.html" class="login-form">
+      <form class="login-form" novalidate>
         <h2>WELCOME</h2>
+        <div class="form-alert" id="form-alert">
+          <span class="material-symbols-outlined alert-icon">error_outline</span>
+          <span class="alert-message"></span>
+        </div>
         <div class="input-group">
           <label for="email">Email</label>
           <input type="email" id="email" name="email" placeholder="Enter your email" required />
@@ -43,6 +48,42 @@
     <p>&copy; 2025 LAZADO</p>
   </footer>
 
+  <script src="../javascript/shared/cart-utils.js"></script>
   <script src="../javascript/script.js"></script>
+  <script>
+    const loginAlert = document.getElementById('form-alert');
+    const loginAlertMsg = loginAlert?.querySelector('.alert-message');
+    const showLoginAlert = (msg, isError) => {
+      if (!loginAlert || !loginAlertMsg) return;
+      loginAlertMsg.textContent = msg;
+      loginAlert.className = 'form-alert';
+      loginAlert.classList.add('form-alert--' + (isError ? 'error' : 'success'));
+      requestAnimationFrame(() => {
+        loginAlert.classList.add('form-alert--visible');
+      });
+      if (!isError) {
+        setTimeout(() => {
+          loginAlert.classList.remove('form-alert--visible');
+        }, 3000);
+      }
+    };
+    document.getElementById('email')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.form.querySelector('.login-button').click(); });
+    document.querySelector('.login-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || !password) {
+        showLoginAlert('Harap isi email dan password!', true);
+        return;
+      }
+      const result = loginUser(email, password);
+      if (result.success) {
+        showLoginAlert('Login berhasil! Mengarahkan...', false);
+        setTimeout(() => { window.location.href = 'product.html'; }, 800);
+      } else {
+        showLoginAlert(result.message, true);
+      }
+    });
+  </script>
 </body>
 </html>

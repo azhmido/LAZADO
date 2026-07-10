@@ -46,41 +46,75 @@ document.addEventListener('DOMContentLoaded', () => {
             buyButton.textContent = 'Add to Cart';
 
             buyButton.addEventListener('click', () => {
-                alert('Anda harus login terlebih dahulu untuk menambahkan produk ke keranjang!');
+                if (isLoggedIn()) {
+                    addToCart(product);
+                    showNotification(`"${product.title}" telah ditambahkan ke keranjang!`);
+                } else {
+                    showNotification('Anda harus login terlebih dahulu untuk menambahkan produk ke keranjang!');
+                }
             });
 
-            card.append(productImage, productTitle, productPrice, productDescription, productCategory, productRating, buyButton);
+            const detailButton = document.createElement('button');
+            detailButton.classList.add('detail-button');
+            detailButton.textContent = 'Lihat Detail';
+            detailButton.addEventListener('click', () => {
+                window.location.href = `html/product.html?id=${product.id}`;
+            });
+
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'product-buttons';
+            buttonsDiv.append(detailButton, buyButton);
+
+            card.append(productImage, productTitle, productPrice, productDescription, productCategory, productRating, buttonsDiv);
             productContainer.appendChild(card);
         });
     };
     
     //gambil data produk dari API
-    fetch("https://fakestoreapi.com/products")
+    if (productContainer) {
+        showSkeleton(productContainer, 8);
+        fetch("https://fakestoreapi.com/products")
         .then((response) => response.json())
         .then((products) => {
             //nyimpan semua produk ke variabel allProducts
             allProducts = products;
             
+            initFilters();
+
             //nampilin semua produk saat pertama kali halaman dimuat
             displayProducts(allProducts);
 
             //event listener untuk fungsi pencarian
-            searchInput.addEventListener('input', () => {
-                const searchTerm = searchInput.value.toLowerCase();
-
-                //filter produk berdasarkan judul
-                const filteredProducts = allProducts.filter(product => {
-                    return product.title.toLowerCase().includes(searchTerm);
-                });
-
-                //nampilin produk yang sudah difilter
-                displayProducts(filteredProducts);
-            });
+            if (searchInput) {
+                searchInput.addEventListener('input', renderFiltered);
+            }
         })
         .catch((error) => {
             console.error('Error saat mengambil data produk:', error);
-            productContainer.textContent = 'Gagal memuat produk. Silakan coba lagi nanti.';
+            if (productContainer) {
+                productContainer.textContent = 'Gagal memuat produk. Silakan coba lagi nanti.';
+            }
         });
+    }
+
+    const renderFiltered = () => {
+        const term = searchInput ? searchInput.value : '';
+        const bar = document.querySelector('.filter-bar');
+        const state = bar ? {
+            sortBy: bar.querySelector('#sort-select').value,
+            priceMin: parseFloat(bar.querySelector('#price-min').value) || 0,
+            priceMax: parseFloat(bar.querySelector('#price-max').value) || 0,
+        } : {};
+        const filtered = applyFilters(allProducts, term, state);
+        displayProducts(filtered);
+    };
+
+    const initFilters = () => {
+        if (productContainer && productContainer.parentElement) {
+            const filterBar = createFilterBar(renderFiltered);
+            productContainer.parentElement.insertBefore(filterBar, productContainer);
+        }
+    };
 
     //tama dark mode
     const themeKey = 'theme-preference';

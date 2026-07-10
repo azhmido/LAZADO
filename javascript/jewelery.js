@@ -1,60 +1,3 @@
-//untuk kelola keranjang
-const getCart = () => {
-  const cartString = localStorage.getItem('lazadoCart');
-  return cartString ? JSON.parse(cartString) : [];
-};
-
-const saveCart = (cart) => {
-  localStorage.setItem('lazadoCart', JSON.stringify(cart));
-  updateCartIconState(); // maanggil update ikon setelah menyimpan
-};
-
-const addToCart = (productToAdd) => {
-  let cart = getCart();
-  const existingProduct = cart.find(item => item.id === productToAdd.id);
-
-  if (existingProduct) {
-    existingProduct.quantity += 1;
-  } else {
-    //salinan objek produk agar tidak mengubah objek asli di 'allProducts'
-    const newProductInCart = { ...productToAdd, quantity: 1 };
-    cart.push(newProductInCart);
-  }
-  saveCart(cart);
-};
-
-const updateCartIconState = () => {
-  const cartIcon = document.getElementById('cart-icon');
-  if (!cartIcon) return; // jika ikon tidak ada (misal: di halaman login)
-  const cart = getCart();
-  if (cart.length > 0) {
-    cartIcon.classList.add('cart-active');
-  } else {
-    cartIcon.classList.remove('cart-active');
-  }
-};
-
-// Fungsi untuk membuat Pop-up Notifikasi Kustom
-const showNotification = (message) => {
-  // Membuat elemen div untuk notifikasi
-  const notification = document.createElement('div');
-  notification.classList.add('custom-notification');
-  notification.textContent = message;
-
-  // Memasukkan notifikasi ke dalam body HTML
-  document.body.appendChild(notification);
-
-  // Menghilangkan notifikasi secara otomatis setelah 3 detik
-  setTimeout(() => {
-    notification.classList.add('hide'); // Tambah class hide untuk animasi pudar
-    // Hapus elemen dari DOM setelah animasi selesai
-    setTimeout(() => {
-      notification.remove();
-    }, 500); 
-  }, 3000);
-};
-
-//insialisasi DOM 
 document.addEventListener('DOMContentLoaded', () => {
 
   const productContainer = document.getElementById('product-container');
@@ -114,31 +57,59 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification(`"${product.title}" telah ditambahkan ke keranjang!`);
       });
 
-      card.append(productImage, productTitle, productPrice, productDescription, productCategory, productRating, buyButton);
+      const detailButton = document.createElement('button');
+      detailButton.classList.add('detail-button');
+      detailButton.textContent = 'Lihat Detail';
+      detailButton.addEventListener('click', () => {
+        window.location.href = `product.html?id=${product.id}`;
+      });
+
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'product-buttons';
+      buttonsDiv.append(detailButton, buyButton);
+
+      card.append(productImage, productTitle, productPrice, productDescription, productCategory, productRating, buttonsDiv);
       productContainer.appendChild(card);
     });
   };
 
   //ngambil data dan insialisasi pencarian
   if(productContainer) {
+    showSkeleton(productContainer, 8);
     fetch("https://fakestoreapi.com/products/category/jewelery")
       .then((response) => response.json())
       .then((products) => {
         allProducts = products;
-        displayProducts(allProducts); // nampilin semua produk awal
+        initFilters();
+        displayProducts(allProducts);
       })
       .catch((error) => {
         console.error('Error saat mengambil data produk:', error);
         productContainer.textContent = 'Gagal memuat produk. Silakan coba lagi nanti.';
       });
-    
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredProducts = allProducts.filter(product => {
-            return product.title.toLowerCase().includes(searchTerm);
-        });
-        displayProducts(filteredProducts);
-    });
+
+    const renderFiltered = () => {
+      const term = searchInput ? searchInput.value : '';
+      const bar = document.querySelector('.filter-bar');
+      const state = bar ? {
+        sortBy: bar.querySelector('#sort-select').value,
+        priceMin: parseFloat(bar.querySelector('#price-min').value) || 0,
+        priceMax: parseFloat(bar.querySelector('#price-max').value) || 0,
+      } : {};
+      const filtered = applyFilters(allProducts, term, state);
+      displayProducts(filtered);
+    };
+
+    if (searchInput) {
+      searchInput.addEventListener('input', renderFiltered);
+    }
+
+    const initFilters = () => {
+      if (productContainer.parentElement) {
+        const filterBar = createFilterBar(renderFiltered);
+        productContainer.parentElement.insertBefore(filterBar, productContainer);
+      }
+    };
   }
 
   //tema dark mode (memperbaiki typo di komentar sebelumnya)
